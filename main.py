@@ -1,763 +1,476 @@
+from pygame import *
 import random
-import pygame
+import sys
 
 
-def limpar_tela_terminal():
-    print("\n" * 3)
+init()
+mixer.init()
 
 
-def pedir_sim_ou_nao(texto):
-    resposta = input(texto).strip().lower()
-    while not (resposta == "s" or resposta == "n"):
-        resposta = input("Digite apenas s ou n: ").strip().lower()
-    return resposta == "s"
+try:
+    fonte_padrao = font.Font(None, 40)
+    fonte_pequena = font.Font(None, 25)
+except:
+    fonte_padrao = font.SysFont("Arial", 40)
+    fonte_pequena = font.SysFont("Arial", 25)
 
 
-def desenhar_texto(pygame, tela, texto, tamanho, cor, x, y, centro=True):
-    fonte = pygame.font.SysFont("arial", tamanho)
-    imagem = fonte.render(texto, True, cor)
-    retangulo = imagem.get_rect()
-    if centro:
-        retangulo.center = (x, y)
-    else:
-        retangulo.topleft = (x, y)
-    tela.blit(imagem, retangulo)
-    return retangulo
+# JOGO DA FORCA
 
-
-def desenhar_botao(pygame, tela, retangulo, texto, cor, cor_texto=(255, 255, 255)):
-    pygame.draw.rect(tela, cor, retangulo, border_radius=8)
-    pygame.draw.rect(tela, (30, 30, 30), retangulo, 2, border_radius=8)
-    desenhar_texto(
-        pygame,
-        tela,
-        texto,
-        24,
-        cor_texto,
-        retangulo.centerx,
-        retangulo.centery,
-        True,
-    )
-
-
-# -------------------- FORCA - PRINCIPAL --------------------
-
-
-def escolher_palavra_forca():
-    palavras = ["python", "teclado", "monitor", "mouse", "arquivo", "janela"]
-    return random.choice(palavras)
-
-
-def mostrar_forca(palavra, letras_certas, vidas):
-    desenho = [
-        "  +---+",
-        "  |   |",
-        "      |",
-        "      |",
-        "      |",
-        "      |",
-        "=========",
-    ]
-
-    erros = 6 - vidas
-    if erros > 0:
-        desenho[2] = "  O   |"
-    if erros > 1:
-        desenho[3] = "  |   |"
-    if erros > 2:
-        desenho[3] = " /|   |"
-    if erros > 3:
-        desenho[3] = " /|\\  |"
-    if erros > 4:
-        desenho[4] = " /    |"
-    if erros > 5:
-        desenho[4] = " / \\  |"
-
-    for linha in desenho:
-        print(linha)
-
-    palavra_mostrada = ""
-    for letra in palavra:
-        if letra in letras_certas:
-            palavra_mostrada = palavra_mostrada + letra + " "
-        else:
-            palavra_mostrada = palavra_mostrada + "_ "
-
-    print("\nPalavra:", palavra_mostrada)
-    print("Vidas:", vidas)
-
-
-def entrada_forca():
-    chute = input("Digite uma letra ou chute a palavra inteira: ").strip().lower()
-    while not chute.isalpha():
-        chute = input("Digite somente letras: ").strip().lower()
-    return chute
-
-
-def jogar_forca_terminal():
-    reiniciar = True
-    while reiniciar:
-        limpar_tela_terminal()
-        palavra = escolher_palavra_forca()
-        letras_certas = []
-        letras_erradas = []
+def forca_texto():
+    while True:
+        temas_frutas = ["MACA", "BANANA", "LARANJA", "MELANCIA", "UVA"]
+        palavra_secreta = random.choice(temas_frutas)
+        letras_acertadas = ["_"] * len(palavra_secreta)
         vidas = 6
-        venceu = False
-
-        while vidas > 0 and not venceu:
-            mostrar_forca(palavra, letras_certas, vidas)
-            print("Letras erradas:", letras_erradas)
-            chute = entrada_forca()
-
-            if len(chute) > 1:
-                if chute == palavra:
-                    venceu = True
+        
+        print("\n=== BEM-VINDO A FORCA (TEMA: FRUTAS) ===")
+        
+        while vidas > 0 and "_" in letras_acertadas:
+            print(f"\nPalavra: {' '.join(letras_acertadas)}")
+            print(f"Vidas restantes: {vidas}")
+            
+            tentativa = input("Digite uma letra ou chute a palavra inteira: ").upper()
+            
+            if not tentativa.isalpha():
+                print("ERRO: Digite apenas letras!")
+                continue
+                
+            if len(tentativa) > 1:
+                if tentativa == palavra_secreta:
+                    letras_acertadas = list(palavra_secreta)
+                    break
                 else:
-                    vidas = 0
-            elif chute in letras_certas or chute in letras_erradas:
-                print("Voce ja tentou essa letra.")
-            elif chute in palavra:
-                letras_certas.append(chute)
+                    print("Chutou a palavra errada! Perdeu uma vida.")
+                    vidas -= 1
             else:
-                letras_erradas.append(chute)
-                vidas = vidas - 1
-
-            venceu = True
-            for letra in palavra:
-                if letra not in letras_certas:
-                    venceu = False
-
-            if len(chute) > 1 and chute == palavra:
-                venceu = True
-
-        mostrar_forca(palavra, letras_certas, vidas)
-        if venceu:
-            print("Voce venceu! A palavra era:", palavra)
+                if tentativa in palavra_secreta:
+                    for i in range(len(palavra_secreta)):
+                        if palavra_secreta[i] == tentativa:
+                            letras_acertadas[i] = tentativa
+                else:
+                    print("Letra não encontrada!")
+                    vidas -= 1
+                    
+        if "_" not in letras_acertadas:
+            print(f"\nVOCÊ VENCEU! A palavra era {palavra_secreta}")
         else:
-            print("Voce perdeu! A palavra era:", palavra)
+            print(f"\nVOCÊ PERDEU! A palavra era {palavra_secreta}")
+            
+        jogar_denovo = input("Deseja jogar novamente? (S/N): ").upper()
+        if jogar_denovo != "S":
+            break
 
-        reiniciar = pedir_sim_ou_nao("Jogar forca de novo? (s/n): ")
-
-
-# -------------------- FORCA - PYGAME --------------------
-
-
-def desenhar_boneco_forca(pygame, tela, erros):
-    preto = (20, 20, 20)
-    pygame.draw.line(tela, preto, (80, 420), (260, 420), 5)
-    pygame.draw.line(tela, preto, (130, 420), (130, 100), 5)
-    pygame.draw.line(tela, preto, (130, 100), (300, 100), 5)
-    pygame.draw.line(tela, preto, (300, 100), (300, 145), 5)
-
-    if erros > 0:
-        pygame.draw.circle(tela, preto, (300, 175), 30, 4)
-    if erros > 1:
-        pygame.draw.line(tela, preto, (300, 205), (300, 300), 4)
-    if erros > 2:
-        pygame.draw.line(tela, preto, (300, 230), (255, 270), 4)
-    if erros > 3:
-        pygame.draw.line(tela, preto, (300, 230), (345, 270), 4)
-    if erros > 4:
-        pygame.draw.line(tela, preto, (300, 300), (260, 365), 4)
-    if erros > 5:
-        pygame.draw.line(tela, preto, (300, 300), (340, 365), 4)
-
-
-def jogar_forca_pygame():
-    pygame.init()
-    tela = pygame.display.set_mode((800, 520))
-    pygame.display.set_caption("Forca")
-    relogio = pygame.time.Clock()
-
-    palavra = escolher_palavra_forca()
+def forca_pygame():
+    tela = display.set_mode((800, 600))
+    display.set_caption("Forca - PyGame")
+    clock = time.Clock()
+    
+    temas_frutas = ["MACA", "BANANA", "LARANJA", "MELANCIA", "UVA"]
+    palavra = random.choice(temas_frutas)
     letras_certas = []
-    letras_erradas = []
-    entrada = ""
-    mensagem = "Digite letras pelo teclado. Enter chuta palavra."
-    fim = False
-    rodando = True
-
-    while rodando:
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_ESCAPE:
-                    rodando = False
-                elif evento.key == pygame.K_r:
-                    palavra = escolher_palavra_forca()
+    vidas = 6
+    estado = "JOGANDO"
+    
+    running = True
+    while running:
+        clock.tick(30)
+        tela.fill((255, 255, 255))
+        
+        for ev in event.get():
+            if ev.type == QUIT:
+                running = False
+            
+            if ev.type == KEYDOWN and estado == "JOGANDO":
+                
+                if ev.key >= K_a and ev.key <= K_z:
+                    letra = chr(ev.key).upper()
+                    if letra in palavra:
+                        if letra not in letras_certas:
+                            letras_certas.append(letra)
+                    else:
+                        vidas -= 1
+            
+            if ev.type == KEYDOWN and estado != "JOGANDO":
+                if ev.key == K_SPACE: 
+                    palavra = random.choice(temas_frutas)
                     letras_certas = []
-                    letras_erradas = []
-                    entrada = ""
-                    mensagem = "Novo jogo!"
-                    fim = False
-                elif not fim:
-                    if evento.key == pygame.K_BACKSPACE:
-                        entrada = entrada[:-1]
-                    elif evento.key == pygame.K_RETURN:
-                        if entrada.isalpha():
-                            if len(entrada) == 1:
-                                if entrada in palavra and entrada not in letras_certas:
-                                    letras_certas.append(entrada)
-                                elif entrada not in letras_erradas:
-                                    letras_erradas.append(entrada)
-                            else:
-                                if entrada == palavra:
-                                    for letra in palavra:
-                                        if letra not in letras_certas:
-                                            letras_certas.append(letra)
-                                else:
-                                    while len(letras_erradas) < 6:
-                                        letras_erradas.append("?")
-                            entrada = ""
-                        else:
-                            mensagem = "Digite somente letras."
-                    elif evento.unicode.isalpha():
-                        entrada = entrada + evento.unicode.lower()
-
-        venceu = True
-        for letra in palavra:
-            if letra not in letras_certas:
-                venceu = False
-
-        if venceu:
-            fim = True
-            mensagem = "Voce venceu! Aperte R para reiniciar."
-        elif len(letras_erradas) > 5:
-            fim = True
-            mensagem = "Voce perdeu! Palavra: " + palavra + ". Aperte R."
-
-        tela.fill((242, 245, 248))
-        desenhar_texto(pygame, tela, "Jogo da Forca", 38, (20, 20, 20), 400, 40)
-        desenhar_boneco_forca(pygame, tela, len(letras_erradas))
-
-        palavra_mostrada = ""
+                    vidas = 6
+                    estado = "JOGANDO"
+                elif ev.key == K_ESCAPE: 
+                    running = False
+                    
+        
+        draw.line(tela, (0,0,0), (100, 500), (300, 500), 5)
+        draw.line(tela, (200, 500), (200, 100), 5)
+        draw.line(tela, (200, 100), (400, 100), 5)
+        draw.line(tela, (400, 100), (400, 150), 5)
+        
+        
+        if vidas <= 5: draw.circle(tela, (0,0,0), (400, 180), 30, 5) 
+        if vidas <= 4: draw.line(tela, (0,0,0), (400, 210), (400, 350), 5) 
+        if vidas <= 3: draw.line(tela, (0,0,0), (400, 230), (350, 300), 5) 
+        if vidas <= 2: draw.line(tela, (0,0,0), (400, 230), (450, 300), 5) 
+        if vidas <= 1: draw.line(tela, (0,0,0), (400, 350), (350, 450), 5) 
+        if vidas <= 0: 
+            draw.line(tela, (0,0,0), (400, 350), (450, 450), 5) 
+            estado = "PERDEU"
+            
+        
+        texto_palavra = ""
+        vitoria = True
         for letra in palavra:
             if letra in letras_certas:
-                palavra_mostrada = palavra_mostrada + letra.upper() + " "
+                texto_palavra += letra + " "
             else:
-                palavra_mostrada = palavra_mostrada + "_ "
-
-        desenhar_texto(pygame, tela, palavra_mostrada, 46, (30, 60, 120), 560, 170)
-        desenhar_texto(pygame, tela, "Entrada: " + entrada, 28, (20, 20, 20), 560, 250)
-        desenhar_texto(
-            pygame,
-            tela,
-            "Erradas: " + " ".join(letras_erradas),
-            24,
-            (160, 40, 40),
-            560,
-            310,
-        )
-        desenhar_texto(pygame, tela, mensagem, 24, (20, 20, 20), 400, 470)
-        pygame.display.flip()
-        relogio.tick(60)
-
-    pygame.quit()
-
-
-# -------------------- PEDRA, PAPEL E TESOURA --------------------
+                texto_palavra += "_ "
+                vitoria = False
+                
+        if vitoria and estado == "JOGANDO":
+            estado = "VENCEU"
+            
+        img_texto = fonte_padrao.render(texto_palavra, True, (0,0,0))
+        tela.blit(img_texto, (400, 500))
+        
+        if estado == "VENCEU":
+            msg = fonte_padrao.render("VENCEU! Espaço para reiniciar ou ESC para sair.", True, (0, 255, 0))
+            tela.blit(msg, (100, 50))
+        elif estado == "PERDEU":
+            msg = fonte_padrao.render(f"PERDEU! A palavra era {palavra}. Espaço/ESC", True, (255, 0, 0))
+            tela.blit(msg, (50, 50))
+            
+        display.update()
 
 
-def resultado_ppt(jogador, computador):
-    if jogador == computador:
-        return "empate"
-    if jogador == "pedra" and computador == "tesoura":
-        return "vitoria"
-    if jogador == "tesoura" and computador == "papel":
-        return "vitoria"
-    if jogador == "papel" and computador == "pedra":
-        return "vitoria"
-    return "derrota"
+# PEDRA, PAPEL E TESOURA
 
-
-def jogar_ppt_terminal():
-    opcoes = ["pedra", "papel", "tesoura"]
-    pontos = 0
-    reiniciar = True
-
-    while reiniciar:
-        print("\nPedra, Papel e Tesoura")
-        jogador = input("Escolha pedra, papel ou tesoura: ").strip().lower()
-        while jogador not in opcoes:
-            jogador = input("Escolha apenas pedra, papel ou tesoura: ").strip().lower()
-
-        computador = random.choice(opcoes)
-        resultado = resultado_ppt(jogador, computador)
-
-        print("Voce:", jogador)
-        print("Computador:", computador)
-
-        if resultado == "vitoria":
-            pontos = pontos + 1
-            print("Voce venceu!")
-        elif resultado == "derrota":
-            print("Voce perdeu!")
+def ppt_texto():
+    opcoes = ["PEDRA", "PAPEL", "TESOURA"]
+    pontos_jogador = 0
+    
+    while True:
+        print("\n=== PEDRA, PAPEL E TESOURA ===")
+        print(f"Sua pontuação: {pontos_jogador}")
+        print("1 - Pedra | 2 - Papel | 3 - Tesoura | 0 - Sair")
+        
+        escolha = input("Sua escolha: ")
+        if escolha == '0': break
+        if escolha not in ['1', '2', '3']:
+            print("Inválido!")
+            continue
+            
+        jogador = opcoes[int(escolha) - 1]
+        pc = random.choice(opcoes)
+        
+        print(f"\nVocê jogou: {jogador}")
+        print(f"Computador jogou: {pc}")
+        
+        if jogador == pc:
+            print("EMPATE!")
+        elif (jogador == "PEDRA" and pc == "TESOURA") or \
+             (jogador == "TESOURA" and pc == "PAPEL") or \
+             (jogador == "PAPEL" and pc == "PEDRA"):
+            print("VOCÊ VENCEU A RODADA!")
+            pontos_jogador += 1
         else:
-            print("Empate!")
+            print("COMPUTADOR VENCEU A RODADA!")
 
-        print("Pontuacao:", pontos)
-        reiniciar = pedir_sim_ou_nao("Jogar de novo? (s/n): ")
-
-
-def criar_imagem_ppt(pygame, tipo):
-    imagem = pygame.Surface((150, 150), pygame.SRCALPHA)
-    preto = (30, 30, 30)
-    azul = (80, 140, 220)
-    verde = (70, 170, 100)
-    vermelho = (210, 80, 80)
-
-    if tipo == "pedra":
-        pygame.draw.circle(imagem, azul, (75, 75), 52)
-        pygame.draw.circle(imagem, preto, (75, 75), 52, 3)
-    elif tipo == "papel":
-        pygame.draw.rect(imagem, verde, (38, 25, 74, 100), border_radius=4)
-        pygame.draw.rect(imagem, preto, (38, 25, 74, 100), 3, border_radius=4)
-        pygame.draw.line(imagem, preto, (52, 55), (98, 55), 2)
-        pygame.draw.line(imagem, preto, (52, 78), (98, 78), 2)
-        pygame.draw.line(imagem, preto, (52, 101), (88, 101), 2)
-    else:
-        pygame.draw.line(imagem, vermelho, (45, 115), (105, 35), 12)
-        pygame.draw.line(imagem, vermelho, (105, 115), (45, 35), 12)
-        pygame.draw.line(imagem, preto, (45, 115), (105, 35), 4)
-        pygame.draw.line(imagem, preto, (105, 115), (45, 35), 4)
-
-    return imagem
-
-
-def jogar_ppt_pygame():
-    pygame.init()
-    tela = pygame.display.set_mode((820, 520))
-    pygame.display.set_caption("Pedra, Papel e Tesoura")
-    relogio = pygame.time.Clock()
-    opcoes = ["pedra", "papel", "tesoura"]
-    imagens = {}
-    for opcao in opcoes:
-        imagens[opcao] = criar_imagem_ppt(pygame, opcao)
-
-    botoes = {
-        "pedra": pygame.Rect(80, 310, 180, 70),
-        "papel": pygame.Rect(320, 310, 180, 70),
-        "tesoura": pygame.Rect(560, 310, 180, 70),
-    }
-    jogador = ""
-    computador = ""
-    mensagem = "Escolha uma opcao."
+def ppt_pygame():
+    tela = display.set_mode((800, 600))
+    display.set_caption("Jokenpo - PyGame")
+    
+    
     pontos = 0
-    rodando = True
-
-    while rodando:
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
-                rodando = False
-            if evento.type == pygame.MOUSEBUTTONDOWN:
-                for opcao in opcoes:
-                    if botoes[opcao].collidepoint(evento.pos):
-                        jogador = opcao
-                        computador = random.choice(opcoes)
-                        resultado = resultado_ppt(jogador, computador)
-                        if resultado == "vitoria":
-                            pontos = pontos + 1
-                            mensagem = "Voce venceu!"
-                        elif resultado == "derrota":
-                            mensagem = "Voce perdeu!"
+    escolha_jogador = ""
+    escolha_pc = ""
+    resultado = "Escolha sua jogada!"
+    
+    opcoes = ["PEDRA", "PAPEL", "TESOURA"]
+    
+    running = True
+    while running:
+        tela.fill((200, 200, 200))
+        
+        for ev in event.get():
+            if ev.type == QUIT:
+                running = False
+                
+            if ev.type == MOUSEBUTTONDOWN:
+                mx, my = ev.pos
+                
+                if 400 < my < 550:
+                    if 100 < mx < 250: escolha_jogador = "PEDRA"
+                    elif 325 < mx < 475: escolha_jogador = "PAPEL"
+                    elif 550 < mx < 700: escolha_jogador = "TESOURA"
+                    
+                    if escolha_jogador != "":
+                        escolha_pc = random.choice(opcoes)
+                        if escolha_jogador == escolha_pc:
+                            resultado = "EMPATE!"
+                        elif (escolha_jogador == "PEDRA" and escolha_pc == "TESOURA") or \
+                             (escolha_jogador == "TESOURA" and escolha_pc == "PAPEL") or \
+                             (escolha_jogador == "PAPEL" and escolha_pc == "PEDRA"):
+                            resultado = "VOCÊ VENCEU!"
+                            pontos += 1
                         else:
-                            mensagem = "Empate!"
+                            resultado = "VOCÊ PERDEU!"
 
-        tela.fill((245, 245, 242))
-        desenhar_texto(pygame, tela, "Pedra, Papel e Tesoura", 36, (20, 20, 20), 410, 38)
-        desenhar_texto(pygame, tela, "Pontos: " + str(pontos), 26, (20, 20, 20), 410, 85)
-        desenhar_texto(pygame, tela, "Voce", 28, (20, 20, 20), 205, 140)
-        desenhar_texto(pygame, tela, "Computador", 28, (20, 20, 20), 615, 140)
-
-        if not jogador == "":
-            tela.blit(imagens[jogador], (130, 165))
-        if not computador == "":
-            tela.blit(imagens[computador], (540, 165))
-
-        for opcao in opcoes:
-            desenhar_botao(pygame, tela, botoes[opcao], opcao.upper(), (50, 90, 150))
-
-        desenhar_texto(pygame, tela, mensagem, 30, (20, 20, 20), 410, 450)
-        pygame.display.flip()
-        relogio.tick(60)
-
-    pygame.quit()
+       
+        draw.rect(tela, (100,100,100), (100, 400, 150, 150)) 
+        tela.blit(fonte_padrao.render("PEDRA", True, (255,255,255)), (120, 460))
+        
+        draw.rect(tela, (200,200,200), (325, 400, 150, 150), 5) 
+        tela.blit(fonte_padrao.render("PAPEL", True, (0,0,0)), (350, 460))
+        
+        draw.rect(tela, (255,100,100), (550, 400, 150, 150)) 
+        tela.blit(fonte_pequena.render("TESOURA", True, (0,0,0)), (580, 460))
+        
+        
+        tela.blit(fonte_padrao.render(f"Pontos: {pontos}", True, (0,0,0)), (50, 50))
+        tela.blit(fonte_padrao.render(f"PC Jogou: {escolha_pc}", True, (255,0,0)), (400, 150))
+        tela.blit(fonte_padrao.render(f"Você Jogou: {escolha_jogador}", True, (0,0,255)), (100, 150))
+        tela.blit(fonte_padrao.render(resultado, True, (0,0,0)), (250, 250))
+        
+        display.update()
 
 
-# -------------------- CALCULADORA --------------------
+# CALCULADORA
 
-
-def calcular(a, operador, b):
-    if operador == "+":
-        return a + b
-    if operador == "-":
-        return a - b
-    if operador == "*":
-        return a * b
-    if operador == "/":
-        if b == 0:
-            return None
-        return a / b
-    return None
-
-
-def jogar_calculadora_terminal():
+def calc_texto():
+    print("\n=== CALCULADORA VAGABUNDA ===")
     memoria = None
-    continuar = True
-
-    while continuar:
-        print("\nCalculadora")
+    
+    while True:
         if memoria is None:
-            primeiro = input("Digite o primeiro numero: ").strip()
-            while not primeiro.replace(".", "", 1).isdigit():
-                primeiro = input("Digite um numero valido: ").strip()
-            numero1 = float(primeiro)
+            num1 = input("Digite o 1º número (ou 'S' para sair): ")
+            if num1.upper() == 'S': break
+            num1 = float(num1)
         else:
-            print("Memoria:", memoria)
-            usar = pedir_sim_ou_nao("Usar a memoria como primeiro numero? (s/n): ")
-            if usar:
-                numero1 = memoria
-            else:
-                primeiro = input("Digite o primeiro numero: ").strip()
-                while not primeiro.replace(".", "", 1).isdigit():
-                    primeiro = input("Digite um numero valido: ").strip()
-                numero1 = float(primeiro)
-
-        operador = input("Digite a operacao (+, -, *, /): ").strip()
-        while operador not in ["+", "-", "*", "/"]:
-            operador = input("Digite somente +, -, * ou /: ").strip()
-
-        segundo = input("Digite o segundo numero: ").strip()
-        while not segundo.replace(".", "", 1).isdigit():
-            segundo = input("Digite um numero valido: ").strip()
-        numero2 = float(segundo)
-
-        resultado = calcular(numero1, operador, numero2)
-        if resultado is None:
-            print("Nao da para dividir por zero.")
+            num1 = memoria
+            print(f"Memória atual: {num1}")
+            
+        op = input("Operação (+, -, *, /, C para limpar): ")
+        if op.upper() == 'C':
+            memoria = None
+            continue
+            
+        num2 = input("Digite o 2º número: ")
+        num2 = float(num2)
+        
+        if op == '+': memoria = num1 + num2
+        elif op == '-': memoria = num1 - num2
+        elif op == '*': memoria = num1 * num2
+        elif op == '/': 
+            if num2 != 0: memoria = num1 / num2
+            else: print("Erro: Divisão por zero"); memoria = None
         else:
-            memoria = resultado
-            print("Resultado:", resultado)
+            print("Operação inválida!")
+            
+        if memoria is not None:
+            print(f"RESULTADO: {memoria}")
 
-        continuar = pedir_sim_ou_nao("Fazer outra conta? (s/n): ")
-
-
-def formatar_numero(numero):
-    if numero is None:
-        return "0"
-    if int(numero) == numero:
-        return str(int(numero))
-    return str(round(numero, 4))
-
-
-def jogar_calculadora_pygame():
-    pygame.init()
-    tela = pygame.display.set_mode((360, 560))
-    pygame.display.set_caption("Calculadora")
-    relogio = pygame.time.Clock()
-
-    botoes_texto = [
-        "7", "8", "9", "/",
-        "4", "5", "6", "*",
-        "1", "2", "3", "-",
-        "C", "0", "=", "+",
+def calc_pygame():
+    tela = display.set_mode((400, 600))
+    display.set_caption("Calculadora de Celular")
+    
+    
+    botoes = [
+        ['7', '8', '9', '/'],
+        ['4', '5', '6', '*'],
+        ['1', '2', '3', '-'],
+        ['C', '0', '=', '+']
     ]
-    botoes = []
-    for i in range(len(botoes_texto)):
-        x = 25 + (i % 4) * 80
-        y = 160 + (i // 4) * 80
-        botoes.append(pygame.Rect(x, y, 65, 65))
+    
+    memoria = ""
+    operacao = ""
+    numero_atual = ""
+    visor = "0"
+    
+    running = True
+    while running:
+        tela.fill((30, 30, 30))
+        
+        for ev in event.get():
+            if ev.type == QUIT:
+                running = False
+            
+            if ev.type == MOUSEBUTTONDOWN:
+                mx, my = ev.pos
+                
+                
+                if my > 150:
+                    coluna = mx // 100
+                    linha = (my - 150) // 112 
+                    
+                    if coluna < 4 and linha < 4:
+                        tecla = botoes[linha][coluna]
+                        
+                        if tecla in "0123456789":
+                            numero_atual += tecla
+                            visor = numero_atual
+                        elif tecla in "+-*/":
+                            if numero_atual != "":
+                                memoria = numero_atual
+                            numero_atual = ""
+                            operacao = tecla
+                        elif tecla == "=":
+                            if memoria != "" and numero_atual != "":
+                                n1 = float(memoria)
+                                n2 = float(numero_atual)
+                                if operacao == '+': res = n1 + n2
+                                elif operacao == '-': res = n1 - n2
+                                elif operacao == '*': res = n1 * n2
+                                elif operacao == '/': res = n1 / n2 if n2 != 0 else 0
+                                
+                                visor = str(res)
+                                memoria = str(res) 
+                                numero_atual = ""
+                        elif tecla == "C":
+                            visor = "0"
+                            numero_atual = ""
+                            memoria = ""
+                            operacao = ""
 
-    tela_numero = "0"
-    memoria = None
-    numero1 = None
-    operador = None
-    digitando_segundo = False
-    mensagem = "Memoria: vazia"
-    rodando = True
-
-    while rodando:
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
-                rodando = False
-            if evento.type == pygame.MOUSEBUTTONDOWN:
-                for i in range(len(botoes)):
-                    if botoes[i].collidepoint(evento.pos):
-                        valor = botoes_texto[i]
-
-                        if valor.isdigit():
-                            if tela_numero == "0" or digitando_segundo:
-                                tela_numero = valor
-                                digitando_segundo = False
-                            else:
-                                tela_numero = tela_numero + valor
-                        elif valor == "C":
-                            tela_numero = "0"
-                            numero1 = None
-                            operador = None
-                            digitando_segundo = False
-                            mensagem = "Memoria: " + formatar_numero(memoria)
-                        elif valor in ["+", "-", "*", "/"]:
-                            numero1 = float(tela_numero)
-                            operador = valor
-                            digitando_segundo = True
-                            mensagem = formatar_numero(numero1) + " " + operador
-                        elif valor == "=" and operador is not None:
-                            numero2 = float(tela_numero)
-                            resultado = calcular(numero1, operador, numero2)
-                            if resultado is None:
-                                tela_numero = "0"
-                                mensagem = "Erro: divisao por zero"
-                            else:
-                                memoria = resultado
-                                tela_numero = formatar_numero(resultado)
-                                mensagem = "Memoria: " + formatar_numero(memoria)
-                            operador = None
-                            digitando_segundo = True
-
-        tela.fill((235, 238, 240))
-        pygame.draw.rect(tela, (25, 30, 36), (25, 35, 310, 95), border_radius=8)
-        desenhar_texto(pygame, tela, tela_numero[-12:], 42, (255, 255, 255), 45, 65, False)
-        desenhar_texto(pygame, tela, mensagem, 18, (70, 70, 70), 30, 135, False)
-
-        for i in range(len(botoes)):
-            valor = botoes_texto[i]
-            cor = (70, 90, 120)
-            if valor in ["+", "-", "*", "/", "="]:
-                cor = (210, 110, 60)
-            if valor == "C":
-                cor = (170, 60, 60)
-            desenhar_botao(pygame, tela, botoes[i], valor, cor)
-
-        pygame.display.flip()
-        relogio.tick(60)
-
-    pygame.quit()
+        
+        draw.rect(tela, (200, 200, 200), (10, 10, 380, 130))
+        tela.blit(fonte_padrao.render(visor, True, (0,0,0)), (20, 50))
+        
+        
+        y_atual = 150
+        for linha in botoes:
+            x_atual = 0
+            for tecla in linha:
+                draw.rect(tela, (80, 80, 80), (x_atual+5, y_atual+5, 90, 100))
+                tela.blit(fonte_padrao.render(tecla, True, (255,255,255)), (x_atual + 35, y_atual + 35))
+                x_atual += 100
+            y_atual += 112
+            
+        display.update()
 
 
-# -------------------- ADIVINHACAO --------------------
+#  JOGO DE ADIVINHAÇÃO
 
+def adiv_texto():
+    print("\n=== JOGO DE ADIVINHAÇÃO ===")
+    print("1 - Eu (usuário) vou adivinhar")
+    print("2 - Computador vai adivinhar")
+    modo = input("Escolha o modo: ")
+    
+    if modo == '1':
+        secreto = random.randint(1, 1023)
+        tentativas = 0
+        while True:
+            chute = int(input("Chute um número (1 a 1023): "))
+            tentativas += 1
+            if chute < secreto: print("-1 (O número é MAIOR)")
+            elif chute > secreto: print("1 (O número é MENOR)")
+            else:
+                print(f"0 (ACERTOU! Em {tentativas} tentativas)")
+                break
+    elif modo == '2':
+        print("Pense em um número de 1 a 1023.")
+        minimo = 1
+        maximo = 1023
+        tentativas = 0
+        
+        while True:
+            chute = (minimo + maximo) // 2
+            tentativas += 1
+            print(f"\nO computador chutou: {chute}")
+            resp = input("Digite -1 (seu num é maior), 1 (seu num é menor) ou 0 (acertou): ")
+            
+            if resp == '0':
+                print(f"O PC acertou em {tentativas} tentativas!")
+                break
+            elif resp == '-1':
+                minimo = chute + 1
+            elif resp == '1':
+                maximo = chute - 1
 
-def pedir_numero_inteiro(texto, minimo, maximo):
-    valor = input(texto).strip()
-    while not valor.isdigit() or int(valor) < minimo or int(valor) > maximo:
-        valor = input("Digite um numero entre " + str(minimo) + " e " + str(maximo) + ": ").strip()
-    return int(valor)
-
-
-def usuario_adivinha_terminal():
-    numero = random.randint(1, 1023)
-    tentativas = 0
-    acertou = False
-
-    while not acertou:
-        chute = pedir_numero_inteiro("Digite seu chute: ", 1, 1023)
-        tentativas = tentativas + 1
-        if numero < chute:
-            print("-1")
-        elif numero > chute:
-            print("1")
-        else:
-            print("0")
-            print("Voce acertou em", tentativas, "tentativas.")
-            acertou = True
-
-
-def computador_adivinha_terminal():
-    print("Pense em um numero entre 1 e 1023.")
+def adiv_pygame():
+    tela = display.set_mode((800, 600))
+    display.set_caption("Adivinhação - PyGame")
+    
+    
     minimo = 1
     maximo = 1023
+    chute = (minimo + maximo) // 2
     tentativas = 0
-    acertou = False
-
-    while not acertou and minimo <= maximo:
-        chute = (minimo + maximo) // 2
-        tentativas = tentativas + 1
-        print("Computador chutou:", chute)
-        dica = input("Digite -1 se seu numero e menor, 1 se e maior, 0 se acertou: ").strip()
-        while dica not in ["-1", "0", "1"]:
-            dica = input("Digite apenas -1, 0 ou 1: ").strip()
-
-        if dica == "-1":
-            maximo = chute - 1
-        elif dica == "1":
-            minimo = chute + 1
+    estado = "JOGANDO"
+    
+    running = True
+    while running:
+        tela.fill((200, 240, 255))
+        
+        for ev in event.get():
+            if ev.type == QUIT:
+                running = False
+                
+            if ev.type == MOUSEBUTTONDOWN and estado == "JOGANDO":
+                mx, my = ev.pos
+                if 400 < my < 500:
+                    if 100 < mx < 250: 
+                        minimo = chute + 1
+                        tentativas += 1
+                        chute = (minimo + maximo) // 2
+                    elif 325 < mx < 475: 
+                        tentativas += 1
+                        estado = "FIM"
+                    elif 550 < mx < 700: 
+                        maximo = chute - 1
+                        tentativas += 1
+                        chute = (minimo + maximo) // 2
+                        
+        tela.blit(fonte_padrao.render("Pense em um número de 1 a 1023", True, (0,0,0)), (150, 50))
+        tela.blit(fonte_padrao.render(f"O PC CHUTA: {chute}", True, (255,0,0)), (250, 200))
+        
+        if estado == "JOGANDO":
+           
+            tela.blit(fonte_pequena.render("-1 (É Maior)", True, (255,255,255)), (110, 440))
+            
+          
+            draw.rect(tela, (100,255,100), (325, 400, 150, 100))
+            tela.blit(fonte_padrao.render("0 (Acertou)", True, (0,0,0)), (330, 435))
+            
+            
+            draw.rect(tela, (255,100,100), (550, 400, 150, 100))
+            tela.blit(fonte_pequena.render("1 (É Menor)", True, (255,255,255)), (560, 440))
         else:
-            print("Computador acertou em", tentativas, "tentativas.")
-            acertou = True
+            tela.blit(fonte_padrao.render(f"PC VENCEU em {tentativas} tentativas!", True, (0,150,0)), (200, 350))
+            tela.blit(fonte_pequena.render("Feche a janela para voltar", True, (0,0,0)), (280, 450))
+
+        display.update()
 
 
-def jogar_adivinhacao_terminal():
-    reiniciar = True
-    while reiniciar:
-        print("\nJogo de Adivinhacao")
-        modo = input("Quem vai adivinhar? usuario ou computador: ").strip().lower()
-        while not (modo == "usuario" or modo == "computador"):
-            modo = input("Digite usuario ou computador: ").strip().lower()
 
-        if modo == "usuario":
-            usuario_adivinha_terminal()
-        else:
-            computador_adivinha_terminal()
+# MENU PRINCIPAL 
 
-        reiniciar = pedir_sim_ou_nao("Jogar de novo? (s/n): ")
+while True:
+    
+    print("MENU DA ATIVIDADE 7")
+    print("1 - Jogo da Forca (Texto)")
+    print("2 - Jogo da Forca (PyGame)")
+    print("3 - Pedra, Papel, Tesoura (Texto)")
+    print("4 - Pedra, Papel, Tesoura (PyGame)")
+    print("5 - Calculadora (Texto)")
+    print("6 - Calculadora (PyGame)")
+    print("7 - Adivinhação (Texto)")
+    print("8 - Adivinhação (PyGame)")
+    print("0 - SAIR")
+    
+    escolha = input("Escolha uma opção: ")
+    
+    if escolha == '1': forca_texto()
+    elif escolha == '2': forca_pygame()
+    elif escolha == '3': ppt_texto()
+    elif escolha == '4': ppt_pygame()
+    elif escolha == '5': calc_texto()
+    elif escolha == '6': calc_pygame()
+    elif escolha == '7': adiv_texto()
+    elif escolha == '8': adiv_pygame()
+    elif escolha == '0':
+        break
+    else:
+        print("Opção inválida!")
 
-
-def jogar_adivinhacao_pygame():
-    pygame.init()
-    tela = pygame.display.set_mode((760, 520))
-    pygame.display.set_caption("Adivinhacao")
-    relogio = pygame.time.Clock()
-
-    botao_usuario = pygame.Rect(130, 210, 210, 70)
-    botao_computador = pygame.Rect(420, 210, 210, 70)
-    botao_menor = pygame.Rect(90, 360, 170, 60)
-    botao_acertou = pygame.Rect(295, 360, 170, 60)
-    botao_maior = pygame.Rect(500, 360, 170, 60)
-    botao_reiniciar = pygame.Rect(285, 440, 190, 50)
-
-    modo = "menu"
-    numero = random.randint(1, 1023)
-    entrada = ""
-    tentativas = 0
-    mensagem = "Escolha quem vai adivinhar."
-    minimo = 1
-    maximo = 1023
-    chute_computador = 512
-    rodando = True
-
-    while rodando:
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_ESCAPE:
-                    rodando = False
-                elif modo == "usuario":
-                    if evento.key == pygame.K_BACKSPACE:
-                        entrada = entrada[:-1]
-                    elif evento.key == pygame.K_RETURN and entrada.isdigit():
-                        chute = int(entrada)
-                        if chute > 0 and chute <= 1023:
-                            tentativas = tentativas + 1
-                            if numero < chute:
-                                mensagem = "-1"
-                            elif numero > chute:
-                                mensagem = "1"
-                            else:
-                                mensagem = "0 - acertou em " + str(tentativas) + " tentativas"
-                                modo = "fim"
-                        entrada = ""
-                    elif evento.unicode.isdigit():
-                        entrada = entrada + evento.unicode
-
-            if evento.type == pygame.MOUSEBUTTONDOWN:
-                if modo == "menu":
-                    if botao_usuario.collidepoint(evento.pos):
-                        modo = "usuario"
-                        numero = random.randint(1, 1023)
-                        entrada = ""
-                        tentativas = 0
-                        mensagem = "Digite o chute e aperte Enter."
-                    elif botao_computador.collidepoint(evento.pos):
-                        modo = "computador"
-                        minimo = 1
-                        maximo = 1023
-                        tentativas = 1
-                        chute_computador = (minimo + maximo) // 2
-                        mensagem = "Use os botoes para responder."
-                elif modo == "computador":
-                    if botao_menor.collidepoint(evento.pos):
-                        maximo = chute_computador - 1
-                    elif botao_maior.collidepoint(evento.pos):
-                        minimo = chute_computador + 1
-                    elif botao_acertou.collidepoint(evento.pos):
-                        mensagem = "0 - computador acertou em " + str(tentativas) + " tentativas"
-                        modo = "fim"
-
-                    if modo == "computador":
-                        if minimo <= maximo:
-                            chute_computador = (minimo + maximo) // 2
-                            tentativas = tentativas + 1
-                        else:
-                            mensagem = "Respostas impossiveis. Reinicie."
-                            modo = "fim"
-                elif modo == "fim":
-                    if botao_reiniciar.collidepoint(evento.pos):
-                        modo = "menu"
-                        mensagem = "Escolha quem vai adivinhar."
-
-        tela.fill((244, 246, 250))
-        desenhar_texto(pygame, tela, "Jogo de Adivinhacao", 38, (20, 20, 20), 380, 45)
-
-        if modo == "menu":
-            desenhar_botao(pygame, tela, botao_usuario, "Usuario", (55, 110, 170))
-            desenhar_botao(pygame, tela, botao_computador, "Computador", (55, 110, 170))
-        elif modo == "usuario":
-            desenhar_texto(pygame, tela, "Numero entre 1 e 1023", 28, (20, 20, 20), 380, 130)
-            desenhar_texto(pygame, tela, "Chute: " + entrada, 36, (20, 20, 20), 380, 230)
-            desenhar_texto(pygame, tela, "Tentativas: " + str(tentativas), 24, (20, 20, 20), 380, 305)
-        elif modo == "computador":
-            desenhar_texto(pygame, tela, "Computador chutou:", 28, (20, 20, 20), 380, 135)
-            desenhar_texto(pygame, tela, str(chute_computador), 60, (30, 80, 150), 380, 220)
-            desenhar_botao(pygame, tela, botao_menor, "-1 menor", (170, 70, 70))
-            desenhar_botao(pygame, tela, botao_acertou, "0 acertou", (70, 150, 90))
-            desenhar_botao(pygame, tela, botao_maior, "1 maior", (70, 90, 170))
-        elif modo == "fim":
-            desenhar_botao(pygame, tela, botao_reiniciar, "Reiniciar", (70, 120, 170))
-
-        desenhar_texto(pygame, tela, mensagem, 26, (20, 20, 20), 380, 475)
-        pygame.display.flip()
-        relogio.tick(60)
-
-    pygame.quit()
-
-
-# -------------------- MENUS --------------------
-
-
-def menu_terminal():
-    rodando = True
-    while rodando:
-        print("\n===== Gincana de Jogos =====")
-        print("1 - Forca no terminal")
-        print("2 - Forca no PyGame")
-        print("3 - Pedra, Papel e Tesoura no terminal")
-        print("4 - Pedra, Papel e Tesoura no PyGame")
-        print("5 - Calculadora no terminal")
-        print("6 - Calculadora no PyGame")
-        print("7 - Adivinhacao no terminal")
-        print("8 - Adivinhacao no PyGame")
-        print("0 - Sair")
-
-        opcao = input("Escolha uma opcao: ").strip()
-
-        if opcao == "1":
-            jogar_forca_terminal()
-        elif opcao == "2":
-            jogar_forca_pygame()
-        elif opcao == "3":
-            jogar_ppt_terminal()
-        elif opcao == "4":
-            jogar_ppt_pygame()
-        elif opcao == "5":
-            jogar_calculadora_terminal()
-        elif opcao == "6":
-            jogar_calculadora_pygame()
-        elif opcao == "7":
-            jogar_adivinhacao_terminal()
-        elif opcao == "8":
-            jogar_adivinhacao_pygame()
-        elif opcao == "0":
-            rodando = False
-        else:
-            print("Opcao invalida.")
-
-
-if __name__ == "__main__":
-    menu_terminal()
+quit()
