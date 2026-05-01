@@ -7,59 +7,11 @@ init()
 mixer.init()
 
 
-try:
-    fonte_padrao = font.Font(None, 40)
-    fonte_pequena = font.Font(None, 25)
-except:
-    fonte_padrao = font.SysFont("Arial", 40)
-    fonte_pequena = font.SysFont("Arial", 25)
+fonte_padrao = font.SysFont("Arial", 40)
+fonte_pequena = font.SysFont("Arial", 25)
 
 
 # JOGO DA FORCA
-
-def forca_texto():
-    while True:
-        temas_frutas = ["MACA", "BANANA", "LARANJA", "MELANCIA", "UVA"]
-        palavra_secreta = random.choice(temas_frutas)
-        letras_acertadas = ["_"] * len(palavra_secreta)
-        vidas = 6
-        
-        print("\n=== BEM-VINDO A FORCA (TEMA: FRUTAS) ===")
-        
-        while vidas > 0 and "_" in letras_acertadas:
-            print(f"\nPalavra: {' '.join(letras_acertadas)}")
-            print(f"Vidas restantes: {vidas}")
-            
-            tentativa = input("Digite uma letra ou chute a palavra inteira: ").upper()
-            
-            if not tentativa.isalpha():
-                print("ERRO: Digite apenas letras!")
-                continue
-                
-            if len(tentativa) > 1:
-                if tentativa == palavra_secreta:
-                    letras_acertadas = list(palavra_secreta)
-                    break
-                else:
-                    print("Chutou a palavra errada! Perdeu uma vida.")
-                    vidas -= 1
-            else:
-                if tentativa in palavra_secreta:
-                    for i in range(len(palavra_secreta)):
-                        if palavra_secreta[i] == tentativa:
-                            letras_acertadas[i] = tentativa
-                else:
-                    print("Letra não encontrada!")
-                    vidas -= 1
-                    
-        if "_" not in letras_acertadas:
-            print(f"\nVOCÊ VENCEU! A palavra era {palavra_secreta}")
-        else:
-            print(f"\nVOCÊ PERDEU! A palavra era {palavra_secreta}")
-            
-        jogar_denovo = input("Deseja jogar novamente? (S/N): ").upper()
-        if jogar_denovo != "S":
-            break
 
 def forca_pygame():
     tela = display.set_mode((800, 600))
@@ -71,6 +23,8 @@ def forca_pygame():
     letras_certas = []
     vidas = 6
     estado = "JOGANDO"
+    modo_palavra = False
+    chute_total = ""
     
     running = True
     while running:
@@ -82,8 +36,26 @@ def forca_pygame():
                 running = False
             
             if ev.type == KEYDOWN and estado == "JOGANDO":
+                if ev.key == K_RETURN:
+                    if modo_palavra:
+                        if chute_total == palavra:
+                            for letra in palavra:
+                                if letra not in letras_certas:
+                                    letras_certas.append(letra)
+                        else:
+                            vidas -= 1
+                        chute_total = ""
+                        modo_palavra = False
+                    else:
+                        modo_palavra = True
                 
-                if ev.key >= K_a and ev.key <= K_z:
+                elif modo_palavra:
+                    if ev.key == K_BACKSPACE:
+                        chute_total = chute_total[:-1]
+                    elif ev.key >= K_a and ev.key <= K_z:
+                        chute_total += chr(ev.key).upper()
+
+                elif ev.key >= K_a and ev.key <= K_z:
                     letra = chr(ev.key).upper()
                     if letra in palavra:
                         if letra not in letras_certas:
@@ -97,15 +69,15 @@ def forca_pygame():
                     letras_certas = []
                     vidas = 6
                     estado = "JOGANDO"
+                    modo_palavra = False
+                    chute_total = ""
                 elif ev.key == K_ESCAPE: 
                     running = False
                     
-        
         draw.line(tela, (0,0,0), (100, 500), (300, 500), 5)
-        draw.line(tela, (200, 500), (200, 100), 5)
-        draw.line(tela, (200, 100), (400, 100), 5)
-        draw.line(tela, (400, 100), (400, 150), 5)
-        
+        draw.line(tela, (0,0,0), (200, 500), (200, 100), 5)
+        draw.line(tela, (0,0,0), (200, 100), (400, 100), 5)
+        draw.line(tela, (0,0,0), (400, 100), (400, 150), 5)
         
         if vidas <= 5: draw.circle(tela, (0,0,0), (400, 180), 30, 5) 
         if vidas <= 4: draw.line(tela, (0,0,0), (400, 210), (400, 350), 5) 
@@ -116,7 +88,6 @@ def forca_pygame():
             draw.line(tela, (0,0,0), (400, 350), (450, 450), 5) 
             estado = "PERDEU"
             
-        
         texto_palavra = ""
         vitoria = True
         for letra in palavra:
@@ -131,6 +102,10 @@ def forca_pygame():
             
         img_texto = fonte_padrao.render(texto_palavra, True, (0,0,0))
         tela.blit(img_texto, (400, 500))
+
+        if modo_palavra:
+            display_chute = fonte_pequena.render("CHUTE A PALAVRA: " + chute_total, True, (0, 0, 255))
+            tela.blit(display_chute, (400, 450))
         
         if estado == "VENCEU":
             msg = fonte_padrao.render("VENCEU! Espaço para reiniciar ou ESC para sair.", True, (0, 255, 0))
@@ -140,6 +115,7 @@ def forca_pygame():
             tela.blit(msg, (50, 50))
             
         display.update()
+    display.quit()
 
 
 # PEDRA, PAPEL E TESOURA
@@ -232,6 +208,7 @@ def ppt_pygame():
         tela.blit(fonte_padrao.render(resultado, True, (0,0,0)), (250, 250))
         
         display.update()
+    display.quit()
 
 
 # CALCULADORA
@@ -346,6 +323,7 @@ def calc_pygame():
             y_atual += 112
             
         display.update()
+    display.quit()
 
 
 #  JOGO DE ADIVINHAÇÃO
@@ -440,6 +418,7 @@ def adiv_pygame():
             tela.blit(fonte_pequena.render("Feche a janela para voltar", True, (0,0,0)), (280, 450))
 
         display.update()
+    display.quit()
 
 
 
